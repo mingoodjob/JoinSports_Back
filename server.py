@@ -5,8 +5,9 @@ import json
 from bson import ObjectId
 from flask import Flask, abort, jsonify, request, Response
 from flask_cors import CORS
-import jwt
+import jwt,maincrud
 from pymongo import MongoClient
+
 
 # maincrud.save('hello@hello.com','hello','최재완','1.jpg','baseball')
 
@@ -27,7 +28,8 @@ def home():
 def comment():
     data = json.loads(request.data)
     comment_txt = data.get('text')
-    print(comment_txt)
+
+    maincrud.comment_save(comment_txt)
     return jsonify({'message': 'success'})
     
 if __name__ == '__main__':

@@ -33,6 +33,16 @@ def nickread(nick):
     
     return id_value
 
+def comment_save(comment):
+
+    doc = {
+        'nick' : '헬로우',
+        'comment' : comment
+
+    }
+    
+    data_col = db.comment
+    data_col.insert_one(doc)
 
 def pr_desc_set(nick,pr_desc):
 
