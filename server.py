@@ -30,7 +30,20 @@ def comment():
     comment_txt = data.get('text')
 
     maincrud.comment_save(comment_txt)
-    return jsonify({'message': 'success'})
+    return jsonify({'result': 'success'})
+
+@app.route('/user_load', methods=['GET'])
+def user_load():
+    users = maincrud.get_user()
+    return jsonify({'result': 'success', 'users' : users})
+
+@app.route('/modal', methods=['POST'])
+def modal():
+    data = json.loads(request.data)
+    idnumber = data.get('idnumber')
+    datas = maincrud.userdata(idnumber)
     
+    return jsonify({'result': 'success','datas':datas})
+
 if __name__ == '__main__':
     app.run('0.0.0.0', port=4000, debug=True)
