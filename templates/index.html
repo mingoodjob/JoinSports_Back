@@ -11,7 +11,6 @@
   function posting() {
     let file = $('#file')[0].files[0]
     let form_data = new FormData()
-
     form_data.append("file_give", file)
 
     $.ajax({
@@ -36,6 +35,8 @@
 
 </script>
 <body>
+ <div>
+ </div>
   <div class="file-upload">
     <img style="display: none;" id="frame" src="" width="300px"/>
     <input type="file" id="file" onchange="preview()">
