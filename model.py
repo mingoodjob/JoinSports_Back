@@ -2,8 +2,13 @@ import numpy as np
 import cv2
 from pymongo import MongoClient
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from datetime import datetime
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import tensorflow_hub as hub
+from tensorflow.keras.models import load_model
 
+model1 = load_model(('static/model/model_pose.h5'), custom_objects={'KerasLayer': hub.KerasLayer})
+model2 = load_model(('static/model/model.h5'), custom_objects={'KerasLayer': hub.KerasLayer})
 net = cv2.dnn.readNet('static/model/yolov5/yolov5s.onnx')
 
 client = MongoClient('mongodb+srv://test:sparta@cluster0.oaadu.mongodb.net/Cluster0?retryWrites=true&w=majority')
@@ -16,13 +21,14 @@ db = client.joinsport
 model = Flask(__name__)
 
 
+
 @model.route('/')
 def home():
     return render_template('index.html')
 
-
 @model.route('/fileupload', methods=['POST'])
 def file_upload():
+
     file = request.files['file_give']
     # 해당 파일에서 확장자명만 추출
     extension = file.filename.split('.')[-1]
@@ -50,6 +56,7 @@ def file_upload():
 
 @model.route('/result')
 def result_ct():
+
     def format_yolov5(frame):
 
         row, col, _ = frame.shape
@@ -60,7 +67,6 @@ def result_ct():
 
     all = db.joinsport.find_one({'name': "hajin"})
     photo = all['name']
-
     image = cv2.imread(f'static/img/img/{photo}.jpg')
     input_image = format_yolov5(image)  # making the image square
     blob = cv2.dnn.blobFromImage(input_image, 1 / 255.0, (640, 640), swapRB=True)
@@ -140,7 +146,7 @@ def result_ct():
         result_ball = False
         result_ct = "baseball"
 
-    elif 32 in result_class_ids:
+    elif 32 or 29 in result_class_ids:
         result_learning = False
         result_ball = True
         result_ct = "ball_check"
@@ -150,55 +156,27 @@ def result_ct():
         result_ball = False
         result_ct = "pose_check"
 
-    ###### 볼 체크하기 ########
-
-    # x = box[0] + box[2]
-    # y = box[1] + box[3]
-
-    # x2 = box2[0] + box2[2]
-    # y2 = box2[1] + box2[3]
-
-    # dst_photo = image.copy()
-    # dst_photo2 = image[box2[1]:y2, box2[0]:x2].copy()
 
     print(result_class_ids)
     print(result_ct)
     print(result_ball)
     print(result_learning)
-
+    # dst_photo = image.copy())
     # cv2.imshow('cut image', dst_photo)
     # cv2.waitKey()
 
+
     if result_learning == True:
-        import os
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-        import tensorflow_hub as hub
-        from tensorflow.keras.models import load_model
-        from tensorflow.keras.preprocessing.image import ImageDataGenerator
-        model = load_model(('static/model/model_pose.h5'), custom_objects={'KerasLayer': hub.KerasLayer})
-        print(load_model)
+
         label_decode = ['baseball', 'basketball', 'soccer', 'volleyball']
+        image = cv2.imread('static/img/img/hajin.jpg')
+        image = cv2.resize(image, (224, 224))
+        image = np.asarray(image)
+        image = image / 255
+        image = np.reshape(image, (1, 224, 224, 3))
+        pred = model1.predict(image)
+        result_ct = label_decode[np.argmax(pred)]
 
-        test_datagen = ImageDataGenerator(rescale=1. / 255)
-        test_dir = 'static/img'
-        test_generator = test_datagen.flow_from_directory(
-            test_dir,
-            # target_size 는 학습할때 설정했던 사이즈와 일치해야 함
-            target_size=(224, 224),
-            color_mode="rgb",
-            shuffle=False,
-
-            # test 셋의 경우, 굳이 클래스가 필요하지 않음
-            # 학습할때는 꼭 binary 혹은 categorical 로 설정해줘야 함에 유의
-            class_mode=None,
-            batch_size=1
-
-        )
-        pred = model.predict(test_generator)
-
-        # print(pred)
-        print(np.argmax(pred[0]))
-        result_ct = label_decode[np.argmax(pred[0])]
         print(result_ct)
 
         # all = db.joinsport.find_one({'name': "hajin"})
@@ -208,38 +186,20 @@ def result_ct():
         return render_template('result.html', category=result_ct)
 
     if result_ball == True:
-        import tensorflow_hub as hub
-        import os
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-        from tensorflow.keras.models import load_model
-        from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-        model = load_model(('static/model/model.h5'), custom_objects={'KerasLayer': hub.KerasLayer})
-        print(load_model)
+        # import os
+        # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
         label_decode = ['baseball', 'basketball', 'soccer', 'volleyball']
+        image2 = cv2.imread('static/img/img/hajin.jpg')
+        image2 = cv2.resize(image2, (224, 224))
+        image2 = np.asarray(image2)
+        image2 = image2 / 255
+        image2 = np.reshape(image2, (1, 224, 224, 3))
+        pred2 = model2.predict(image2)
+        result_ct = label_decode[np.argmax(pred2)]
 
-        test_datagen = ImageDataGenerator(rescale=1. / 255)
-        test_dir = 'static/img'
-        test_generator = test_datagen.flow_from_directory(
-            test_dir,
-            # target_size 는 학습할때 설정했던 사이즈와 일치해야 함
-            target_size=(224, 224),
-            color_mode="rgb",
-            shuffle=False,
-
-            # test 셋의 경우, 굳이 클래스가 필요하지 않음
-            # 학습할때는 꼭 binary 혹은 categorical 로 설정해줘야 함에 유의
-            class_mode=None,
-            batch_size=1
-
-        )
-        pred = model.predict(test_generator)
-
-        # print(pred)
-        print(np.argmax(pred[0]))
-        result_ct = label_decode[np.argmax(pred[0])]
         print(result_ct)
-
         # all = db.joinsport.find_one({'name': "hajin"})
         # name = all['name']
         db.joinsport.update_one({'name': "hajin"}, {"$set": {'category': result_ct}}, upsert=True)
