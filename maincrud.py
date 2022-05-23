@@ -26,7 +26,6 @@ def get_user():
     users = list(col.find())
     for user in users:
         user["_id"] = str(user["_id"])
-        print(str(user["_id"]))
         
     return users
 
@@ -35,23 +34,45 @@ def random_user():
     
 def userdata(idnumber):
     
-    data_col = db.user
-    data = data_col.find_one({'_id': ObjectId(idnumber)})
+    data_user = db.user
+    
+    data = data_user.find_one({'_id': ObjectId(idnumber)})
     data["_id"] = str(data["_id"])
-       
+    
     return data
 
-def comment_save(comment):
+def comment_list(nick):
+    data_comment = db.comment
+    comment_lists = data_comment.find({'comment_id': nick})
+    
+    result = []
+    
+    for comment in comment_lists:
+        comment['_id'] = str(comment['_id'])
+        result.append(comment)
+    
+    return result
+
+def comment_save(comment_id,comment):
+    nick = 'jlo8lEhAGOLT8Qv'
 
     doc = {
-        'comment_id' : '',
-        'nick' : '헬로우',
-        'comment' : comment
-
+        'comment_id' : comment_id,
+        'nick' : nick,
+        'comment' : comment,
+        'date' : '10초전'
     }
     
     data_col = db.comment
+    db_user = db.user
     data_col.insert_one(doc)
+    
+    
+    nickname = db_user.find_one({'nick':nick},{'_id':0})
+    pr_photo = nickname['pr_photo']
+    
+    return nick,pr_photo
+    
 
 def pr_desc_set(nick,pr_desc):
 
@@ -82,7 +103,27 @@ def random_string():
         
         return ran_str
 
+def comment_edit(cm_data):
+    
+    data_comment = db.comment
+    
+    data = data_comment.find_one({'_id': ObjectId(cm_data)})
+    data["_id"] = str(data["_id"])
+    
+    return data
+    
+def set_comment(cm_data,value):
+    data_comment = db.comment
+    data_comment.update_one({'_id': ObjectId(cm_data)}, {"$set":{"comment" :value}})
+    
+def delete_comment(cm_number):
+    data_comment = db.comment
+    data_comment.delete_one({"_id":ObjectId(cm_number)})
 
+def set_pr(email,value):
+    data_user = db.user
+    data_user.update_one({'email': email},{"$set":{"pr_desc" : value}})
+    
 # get_user()
 
 

@@ -1,3 +1,4 @@
+from crypt import methods
 from datetime import datetime, timedelta
 from functools import wraps
 import hashlib
@@ -7,14 +8,6 @@ from flask import Flask, abort, jsonify, request, Response
 from flask_cors import CORS
 import jwt,maincrud
 from pymongo import MongoClient
-
-
-# maincrud.save('hello@hello.com','hello','최재완','1.jpg','baseball')
-
-# name = '이민기'
-# get_id = maincrud.nickread(name)
-# print(get_id)
-# maincrud.pr_desc_set('김하진','요리하기')
 
 app = Flask(__name__)
 cors = CORS(app, resources={
@@ -28,9 +21,11 @@ def home():
 def comment():
     data = json.loads(request.data)
     comment_txt = data.get('text')
+    comment_nick = data.get('nick')
 
-    maincrud.comment_save(comment_txt)
-    return jsonify({'result': 'success'})
+    nickname = maincrud.comment_save(comment_nick,comment_txt)
+    
+    return jsonify({'result': 'success', 'nickname':nickname[0],'pr_photo':nickname[1]})
 
 @app.route('/user_load', methods=['GET'])
 def user_load():
@@ -42,8 +37,44 @@ def modal():
     data = json.loads(request.data)
     idnumber = data.get('idnumber')
     datas = maincrud.userdata(idnumber)
+    nick = datas['nick']
+    pr_photo = datas['pr_photo']
+    comments = maincrud.comment_list(nick)
     
-    return jsonify({'result': 'success','datas':datas})
+    return jsonify({'result': 'success','datas':datas, 'comments':comments})
 
+@app.route('/comment_edit', methods=['POST'])
+def comment_edit():
+    data = json.loads(request.data)
+    cm_number = data.get('cm_number')
+    cm_data = maincrud.comment_edit(cm_number)
+    print(cm_data)
+    
+    return jsonify({'cm_data': cm_data})
+@app.route('/comment_edit_submit', methods=['POST'])
+def comment_edit_submit():
+    data = json.loads(request.data)
+    cm_number = data.get('cm_number')
+    value = data.get('value')
+    maincrud.set_comment(cm_number,value)
+    
+    return jsonify({'result': 'ok'})
+
+@app.route('/pr_edit', methods=['POST'])
+def pr_edit():
+    data = json.loads(request.data)
+    email = data.get('email')
+    value = data.get('value')
+    maincrud.set_pr(email,value)
+    
+    return jsonify({'result': 'ok'})    
+@app.route('/comment_delete', methods=['POST'])
+def comment_delete():
+    data = json.loads(request.data)
+    cm_number = data.get('cm_number')
+    maincrud.delete_comment(cm_number)
+    
+    return jsonify({'result': 'ok'})
+    
 if __name__ == '__main__':
     app.run('0.0.0.0', port=4000, debug=True)
