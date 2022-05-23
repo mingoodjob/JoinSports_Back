@@ -13,10 +13,6 @@ net = cv2.dnn.readNet('static/model/yolov5/yolov5s.onnx')
 
 client = MongoClient('mongodb+srv://test:sparta@cluster0.oaadu.mongodb.net/Cluster0?retryWrites=true&w=majority')
 db = client.joinsport
-#
-# user_photo = db.iamge.find_one({'photo': ''})
-#
-# print(user_photo)
 
 model = Flask(__name__)
 
@@ -38,7 +34,7 @@ def file_upload():
     # photo = '{name}.{extension}'
     # pwd = request.form['pwd']
     # 파일 저장 경로 설정 (파일은 서버 컴퓨터 자체에 저장됨)
-    save_to = f'static/img/img/{name}.{extension}'
+    save_to = f'static/img/{name}.{extension}'
     # 파일 저장!
     file.save(save_to)
     #
@@ -48,8 +44,6 @@ def file_upload():
     #     'category': ""
     # }
     # db.joinsport.insert_one(doc)
-
-    ### 현재 프로젝트에서는 db에 저장하는 코드 작성 필요! ###
 
     return jsonify({'result': 'success'})
 
@@ -67,7 +61,7 @@ def result_ct():
 
     all = db.joinsport.find_one({'name': "hajin"})
     photo = all['name']
-    image = cv2.imread(f'static/img/img/{photo}.jpg')
+    image = cv2.imread(f'static/img/{photo}.jpg')
     input_image = format_yolov5(image)  # making the image square
     blob = cv2.dnn.blobFromImage(input_image, 1 / 255.0, (640, 640), swapRB=True)
     net.setInput(blob)
@@ -120,6 +114,7 @@ def result_ct():
     class_list = []
 
     with open("static/model/yolov5/classes.txt", "r") as f:
+
         class_list = [cname.strip() for cname in f.readlines()]
 
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.25, 0.45)
@@ -169,7 +164,7 @@ def result_ct():
     if result_learning == True:
 
         label_decode = ['baseball', 'basketball', 'soccer', 'volleyball']
-        image = cv2.imread('static/img/img/hajin.jpg')
+        image = cv2.imread('static/img/hajin.jpg')
         image = cv2.resize(image, (224, 224))
         image = np.asarray(image)
         image = image / 255
@@ -191,7 +186,7 @@ def result_ct():
         # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
         label_decode = ['baseball', 'basketball', 'soccer', 'volleyball']
-        image2 = cv2.imread('static/img/img/hajin.jpg')
+        image2 = cv2.imread('static/img/hajin.jpg')
         image2 = cv2.resize(image2, (224, 224))
         image2 = np.asarray(image2)
         image2 = image2 / 255
