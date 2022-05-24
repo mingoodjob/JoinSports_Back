@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import random
 import tensorflow_hub as hub
 from tensorflow.keras.models import load_model
 
@@ -17,14 +18,13 @@ db = client.joinsport
 model = Flask(__name__)
 
 
-
 @model.route('/')
 def home():
     return render_template('index.html')
 
+
 @model.route('/fileupload', methods=['POST'])
 def file_upload():
-
     file = request.files['file_give']
     # 해당 파일에서 확장자명만 추출
     extension = file.filename.split('.')[-1]
@@ -50,7 +50,6 @@ def file_upload():
 
 @model.route('/result')
 def result_ct():
-
     def format_yolov5(frame):
 
         row, col, _ = frame.shape
@@ -85,6 +84,7 @@ def result_ct():
             classes_scores = row[5:]
             _, _, _, max_indx = cv2.minMaxLoc(classes_scores)
             class_id = max_indx[1]
+
             if (classes_scores[class_id] > .25):
                 confidences.append(confidence)
                 class_ids.append(class_id)
@@ -97,24 +97,9 @@ def result_ct():
                 box = np.array([left, top, width, height])
                 boxes.append(box)
 
-                # elif class_id == 35:
-
-                #     confidences.append(confidence)
-
-                #     class_ids.append(class_id)
-
-                #     x, y, w, h = row[0].item(), row[1].item(), row[2].item(), row[3].item()
-                #     left = int((x - 0.5 * w) * x_factor)
-                #     top = int((y - 0.5 * h) * y_factor)
-                #     width = int(w * x_factor)
-                #     height = int(h * y_factor)
-                #     box2 = np.array([left, top, width, height])
-                #     boxes.append(box2)
-
     class_list = []
 
     with open("static/model/yolov5/classes.txt", "r") as f:
-
         class_list = [cname.strip() for cname in f.readlines()]
 
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.25, 0.45)
@@ -137,14 +122,25 @@ def result_ct():
         cv2.putText(image, class_list[class_id], (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 0, 0))
 
     if 34 in result_class_ids:
-        result_learning = False
-        result_ball = False
-        result_ct = "baseball"
+        # result_learning = False
+        # result_ball = False
+        # result_ct = "baseball"
+        all = list(db.event.find({'category': "baseball"}))
+        all_choice = random.choice(all)
+        baseball = all_choice['photo']
+        result_ct = baseball
+        return render_template('event_page.html', category=result_ct, name="hajin", )
 
-    elif 32 or 29 in result_class_ids:
+    elif 32 in result_class_ids:
         result_learning = False
         result_ball = True
         result_ct = "ball_check"
+
+        x = box[0] + box[2]
+        y = box[1] + box[3]
+        dst_photo = image[box[1]:y, box[0]:x].copy()
+        # cv2.imshow('cut image', dst_photo)
+        # cv2.waitKey()
 
     else:
         result_learning = True
@@ -152,17 +148,16 @@ def result_ct():
         result_ct = "pose_check"
 
 
+
+    db.joinsport.update_one({'name': "hajin"}, {"$set": {'category': result_ct}}, upsert=True)
+
+
     print(result_class_ids)
     print(result_ct)
     print(result_ball)
     print(result_learning)
-    # dst_photo = image.copy())
-    # cv2.imshow('cut image', dst_photo)
-    # cv2.waitKey()
-
 
     if result_learning == True:
-
         label_decode = ['baseball', 'basketball', 'soccer', 'volleyball']
         image = cv2.imread('static/img/hajin.jpg')
         image = cv2.resize(image, (224, 224))
@@ -171,35 +166,76 @@ def result_ct():
         image = np.reshape(image, (1, 224, 224, 3))
         pred = model1.predict(image)
         result_ct = label_decode[np.argmax(pred)]
+        print(pred)
+        print(result_ct)
+
+        if result_ct == "baseball":
+            all = list(db.event.find({'category': "baseball"}))
+            all_choice = random.choice(all)
+            baseball = all_choice['photo']
+            result_ct = baseball
+
+        if result_ct == "basketball":
+            all2 = list(db.event.find({'category': "basketball"}))
+            all_choice2 = random.choice(all2)
+            basketball = all_choice2['photo']
+            result_ct = basketball
+
+        if result_ct == "soccer":
+            all3 = list(db.event.find({'category': "soccer"}))
+            all_choice3 = random.choice(all3)
+            soccer = all_choice3['photo']
+            result_ct = soccer
+
+        if result_ct == "volleyball":
+            all4 = list(db.event.find({'category': "volleyball"}))
+            all_choice4 = random.choice(all4)
+            volleyball = all_choice4['photo']
+            result_ct = volleyball
 
         print(result_ct)
 
-        # all = db.joinsport.find_one({'name': "hajin"})
-        # name = all['name']
-        db.joinsport.update_one({'name': "hajin"}, {"$set": {'category': result_ct}}, upsert=True)
-
-        return render_template('result.html', category=result_ct)
+        return render_template('event_page.html', category=result_ct, name="hajin")
 
     if result_ball == True:
 
-        # import os
-        # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
         label_decode = ['baseball', 'basketball', 'soccer', 'volleyball']
-        image2 = cv2.imread('static/img/hajin.jpg')
+        image2 = dst_photo
         image2 = cv2.resize(image2, (224, 224))
         image2 = np.asarray(image2)
         image2 = image2 / 255
         image2 = np.reshape(image2, (1, 224, 224, 3))
         pred2 = model2.predict(image2)
         result_ct = label_decode[np.argmax(pred2)]
+        print(pred2)
 
-        print(result_ct)
-        # all = db.joinsport.find_one({'name': "hajin"})
-        # name = all['name']
-        db.joinsport.update_one({'name': "hajin"}, {"$set": {'category': result_ct}}, upsert=True)
+        if result_ct == "baseball":
+            all = list(db.event.find({'category': "baseball"}))
+            all_choice = random.choice(all)
+            baseball = all_choice['photo']
+            result_ct = baseball
 
-    return render_template('result.html', category=result_ct)
+        if result_ct == "basketball":
+            all2 = list(db.event.find({'category': "basketball"}))
+            all_choice2 = random.choice(all2)
+            basketball = all_choice2['photo']
+            result_ct = basketball
+
+        if result_ct == "soccer":
+            all3 = list(db.event.find({'category': "soccer"}))
+            all_choice3 = random.choice(all3)
+            soccer = all_choice3['photo']
+            result_ct = soccer
+
+        if result_ct == "volleyball":
+            all4 = list(db.event.find({'category': "volleyball"}))
+            all_choice4 = random.choice(all4)
+            volleyball = all_choice4['photo']
+            result_ct = volleyball
+
+    print(result_ct)
+    db.joinsport.update_one({'name': "hajin"}, {"$set": {'category': result_ct}}, upsert=True)
+    return render_template('event_page.html', category=result_ct, name="hajin", )
 
 
 if __name__ == '__main__':
