@@ -4,8 +4,9 @@ from bson import ObjectId
 from flask import Flask, abort, jsonify, request, Response
 from flask_cors import CORS
 from pymongo import MongoClient
-import hashlib,certifi,jwt,json
+import hashlib,jwt,json,os
 import maincrud,model
+import urllib
 
 SECRET_KEY = 'turtle'
 
@@ -48,6 +49,7 @@ def join():
     hashed_password = hashlib.sha256(pwd.encode('utf-8')).hexdigest()
 
     maincrud.user_save(email,hashed_password,nick,imagefile,category)
+    os.remove(f'static/img/{image.filename}')
 
     return jsonify({"status": "success"})
 
@@ -75,6 +77,7 @@ def check_nick():
 
 @app.route("/login", methods=["POST"])
 def login():
+    global userid
     data = json.loads(request.data)
     #로그인에서 데이터는 request data를 불러온다.
     email = data.get("email")
@@ -122,11 +125,12 @@ def login():
     #     return jsonify({"message": "success"})
 @app.route('/comment', methods=['POST'])
 def comment():
+    global userid
     data = json.loads(request.data)
     comment_txt = data.get('text')
-    comment_nick = data.get('nick')
+    commnet_nick = data.get('nick')
 
-    nickname = maincrud.comment_save(comment_nick,comment_txt)
+    nickname = maincrud.comment_save(commnet_nick,comment_txt)
     
     return jsonify({'result': 'success'})
 
@@ -137,7 +141,6 @@ def user_load():
 
 @app.route('/modal', methods=['POST'])
 def modal():
-    uid = 'dkssud11'
     data = json.loads(request.data)
     idnumber = data.get('idnumber')
     datas = maincrud.userdata(idnumber)
@@ -145,7 +148,7 @@ def modal():
     pr_photo = datas['pr_photo']
     comments = maincrud.comment_list(nick)
     
-    return jsonify({'result': 'success','datas':datas, 'comments':comments, 'uid':uid})
+    return jsonify({'result': 'success','datas':datas, 'comments':comments})
 
 @app.route('/comment_edit', methods=['POST'])
 def comment_edit():
@@ -179,7 +182,18 @@ def comment_delete():
     maincrud.delete_comment(cm_number)
     
     return jsonify({'result': 'ok'})
+
+@app.route('/gategory', methods=['POST'])
+def category():
+    data = json.loads(request.data)
+    gategory = data.get('category')
+    print(category)
+    users = maincrud.random_user(gategory)
+
+    print(list(users))
     
+    return jsonify({'result': 'ok', 'users': users})
+
 if __name__ == '__main__':
     print('서버 실행이 완료 되었습니다.')
     app.run('0.0.0.0', port=5001, debug=True, use_reloader=False)

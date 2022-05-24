@@ -4,14 +4,16 @@ import os
 import random
 import tensorflow_hub as hub
 from tensorflow.keras.models import load_model
+import urllib
+import certifi
 
 def model_load():
 
     global model1,model2,net
 
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-    model1 = load_model(('static/model/model_pose.h5'), custom_objects={'KerasLayer': hub.KerasLayer})
-    model2 = load_model(('static/model/model.h5'), custom_objects={'KerasLayer': hub.KerasLayer})
+    os.environ['HOME']
+    model1 = load_model(('./static/model/model_pose.h5'), custom_objects={'KerasLayer': hub.KerasLayer})
+    model2 = load_model(('./static/model/model.h5'), custom_objects={'KerasLayer': hub.KerasLayer})
     net = cv2.dnn.readNet('static/model/yolov5/yolov5s.onnx')
 
 def result_ct(photo):

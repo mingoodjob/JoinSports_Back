@@ -24,15 +24,14 @@ def user_save(email,pwd,nick,pr_photo,category):
 def get_user():
 
     col = db.user
-    users = list(col.find())
-    
+    users = col.aggregate([{ "$sample": { "size": 9 } }])
     result = []
     
     for user in users:
         user["_id"] = str(user["_id"])
         result.append(user)
         
-    return users
+    return result
 
 def email_get(email):
     
@@ -69,6 +68,17 @@ def userdata(idnumber):
     
     return data
 
+def userid(email):
+
+    data_user = db.user
+    
+    data = data_user.find_one({'email': email})
+
+    nick = data["nick"]
+
+    return nick
+
+
 def comment_list(nick):
     data_comment = db.comment
     comment_lists = data_comment.find({'comment_id': nick})
@@ -82,7 +92,7 @@ def comment_list(nick):
     return result
 
 def comment_save(comment_id,comment):
-    nick = 'dkssud1'
+    nick = '이민기'
 
     data_col = db.comment
     db_user = db.user
@@ -155,8 +165,19 @@ def set_pr(email,value):
     data_user = db.user
     data_user.update_one({'email': email},{"$set":{"pr_desc" : value}})
     
-# get_user()
+def random_user(category):
+    users = db.user.aggregate([
+    {"$match" : {"category":category}}, 
+    {"$sample": {"size": 9}} 
+    ]);
 
+    result = []
+    
+    for user in users:
+        user['_id'] = str(user['_id'])
+        result.append(user)
+
+    return result
 
 # file_list = os.listdir('./img')
 
