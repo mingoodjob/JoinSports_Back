@@ -154,10 +154,13 @@ def delete_comment(cm_number):
 def set_pr(email,value):
     data_user = db.user
     data_user.update_one({'email': email},{"$set":{"pr_desc" : value}})
-    
-# get_user()
 
+def choice():
+    all = list(db.user.find({}))
+    all_number = random.choice(all)
+    all_choice = all_number['category']
 
+    return all_choice
 # file_list = os.listdir('./img')
 
 # for i in file_list:

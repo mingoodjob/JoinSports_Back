@@ -6,10 +6,11 @@ from flask_cors import CORS
 from pymongo import MongoClient
 import hashlib,certifi,jwt,json
 import maincrud,model
-
+client = MongoClient('mongodb+srv://test:sparta@cluster0.avef3.mongodb.net/Cluster0?retryWrites=true&w=majority',tlsCAFile=certifi.where())
+db = client.joinsports
 SECRET_KEY = 'turtle'
 
-model.model_load()
+# model.model_load()
 
 # def authorize(f):  # 데코레이션 함수 정의 (f)로 인자를 전달 받을 수 있도록함
 #     def decorated_function():  # 반복해야할 함수 정의
@@ -94,8 +95,10 @@ def login():
         #(result의 _id = mongodb에서 만들어준 primary key)를 string화.string을 하지 않으면 object id만 출력되기 때문에
         'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
     }
+
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     #jwt 인코딩
+    print(payload['id'])
     print(token)
     #토큰 안에 들어갈 내용
     #토큰 출력한 걸 google jwt검색 후 입력하고 secret key입력하면 정보가 잘 나오는지 확인.
@@ -179,7 +182,15 @@ def comment_delete():
     maincrud.delete_comment(cm_number)
     
     return jsonify({'result': 'ok'})
-    
+
+@app.route('/event_page', methods=['GET'])
+def event_page():
+
+    users = maincrud.choice()
+    print(users)
+
+    return jsonify({'result': 'success', 'category': users})
+
 if __name__ == '__main__':
     print('서버 실행이 완료 되었습니다.')
     app.run('0.0.0.0', port=5001, debug=True, use_reloader=False)
