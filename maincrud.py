@@ -25,8 +25,12 @@ def get_user():
 
     col = db.user
     users = list(col.find())
+    
+    result = []
+    
     for user in users:
         user["_id"] = str(user["_id"])
+        result.append(user)
         
     return users
 
@@ -49,8 +53,8 @@ def login_auth(email, password):
     col = db.user
 
     result = col.find_one({
-        'email': '1234@1234.com',
-        'pwd': '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'
+        'email': email,
+        'pwd': password
     })
 
     return result
@@ -61,6 +65,7 @@ def userdata(idnumber):
     
     data = data_user.find_one({'_id': ObjectId(idnumber)})
     data["_id"] = str(data["_id"])
+    print(type(data["_id"]))
     
     return data
 
@@ -77,24 +82,28 @@ def comment_list(nick):
     return result
 
 def comment_save(comment_id,comment):
-    nick = 'jlo8lEhAGOLT8Qv'
+    nick = 'dkssud1'
+
+    data_col = db.comment
+    db_user = db.user
+    
+    user = db_user.find_one({'nick': nick})
+    pr_photo = user['pr_photo']
 
     doc = {
         'comment_id' : comment_id,
         'nick' : nick,
         'comment' : comment,
+        'pr_photo' : pr_photo,
         'date' : '10초전'
     }
     
-    data_col = db.comment
-    db_user = db.user
     data_col.insert_one(doc)
     
     
     nickname = db_user.find_one({'nick':nick},{'_id':0})
-    pr_photo = nickname['pr_photo']
     
-    return nick,pr_photo
+    return nick
     
 
 def pr_desc_set(nick,pr_desc):
@@ -114,7 +123,6 @@ def img_save(req_file):
         res = requests.post(url, payload)
         filename = res.json()['data']['url']
         
-        print(filename)
         return filename
         
 def random_string():

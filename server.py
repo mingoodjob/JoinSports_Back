@@ -9,7 +9,7 @@ import maincrud,model
 
 SECRET_KEY = 'turtle'
 
-# model.model_load()
+model.model_load()
 
 # def authorize(f):  # 데코레이션 함수 정의 (f)로 인자를 전달 받을 수 있도록함
 #     def decorated_function():  # 반복해야할 함수 정의
@@ -28,7 +28,7 @@ cors = CORS(app, resources={
             r'*': {'origins': ['http://127.0.0.1:5001', 'http://127.0.0.1:5500']}})
 
 @app.route("/")
-def Auth():
+def Home():
     return jsonify({'result': 'happy'})
 
 @app.route("/join", methods=["POST"])
@@ -38,15 +38,11 @@ def join():
     nick = request.form['nick']
     pwd = request.form['pwd']
     image = request.files['filegive']
-    print(email, nick, pwd, image.filename)
     image.save(f'static/img/{image.filename}')
     # category = '1'
     imagefile = maincrud.img_save(f'static/img/{image.filename}')
     category = model.result_ct(f'{image.filename}')
     # imagefile = f'{image.filename}'
-    
-    print(category)
-
 
     # 비밀번호 해싱
     hashed_password = hashlib.sha256(pwd.encode('utf-8')).hexdigest()
@@ -81,13 +77,11 @@ def check_nick():
 def login():
     data = json.loads(request.data)
     #로그인에서 데이터는 request data를 불러온다.
-
     email = data.get("email")
     password = data.get("password")
     #email과 password는 data에서 각각 가져오는데,
     hashed_pw = hashlib.sha256(password.encode('utf-8')).hexdigest()
     #해싱된_비밀번호는 = 이렇게 해싱처리 해준다.
-
     result = maincrud.login_auth(email,hashed_pw)
     #result는 db에서 email과 hashed_pw를 찾아온 값들로 정의한다.
 
@@ -134,7 +128,7 @@ def comment():
 
     nickname = maincrud.comment_save(comment_nick,comment_txt)
     
-    return jsonify({'result': 'success', 'nickname':nickname[0],'pr_photo':nickname[1]})
+    return jsonify({'result': 'success'})
 
 @app.route('/user_load', methods=['GET'])
 def user_load():
@@ -143,23 +137,21 @@ def user_load():
 
 @app.route('/modal', methods=['POST'])
 def modal():
-    uid = '1'
+    uid = 'dkssud11'
     data = json.loads(request.data)
     idnumber = data.get('idnumber')
-    print(idnumber)
     datas = maincrud.userdata(idnumber)
     nick = datas['nick']
     pr_photo = datas['pr_photo']
     comments = maincrud.comment_list(nick)
     
-    return jsonify({'result': 'success','datas':datas, 'comments':comments})
+    return jsonify({'result': 'success','datas':datas, 'comments':comments, 'uid':uid})
 
 @app.route('/comment_edit', methods=['POST'])
 def comment_edit():
     data = json.loads(request.data)
     cm_number = data.get('cm_number')
     cm_data = maincrud.comment_edit(cm_number)
-    print(cm_data)
     
     return jsonify({'cm_data': cm_data})
 @app.route('/comment_edit_submit', methods=['POST'])
@@ -190,5 +182,5 @@ def comment_delete():
     
 if __name__ == '__main__':
     print('서버 실행이 완료 되었습니다.')
-    app.run('0.0.0.0', port=5001, debug=True)
+    app.run('0.0.0.0', port=5001, debug=True, use_reloader=False)
 
