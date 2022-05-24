@@ -22,6 +22,7 @@ def user_save(email,pwd,nick,pr_photo,category):
     data_col.insert_one(doc)
     
 def get_user():
+
     col = db.user
     users = list(col.find())
     for user in users:
@@ -29,9 +30,31 @@ def get_user():
         
     return users
 
-def random_user():
-    pass
+def email_get(email):
     
+    col = db.user
+    is_exists = col.find_one({'email': email})
+
+    return is_exists
+
+def nick_get(nick):
+    
+    col = db.user
+    is_exists = col.find_one({'nick': nick})
+
+    return is_exists
+    
+def login_auth(email, password):
+    
+    col = db.user
+
+    result = col.find_one({
+        'email': '1234@1234.com',
+        'pwd': '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'
+    })
+
+    return result
+
 def userdata(idnumber):
     
     data_user = db.user
