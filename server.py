@@ -1,12 +1,10 @@
-from crypt import methods
 from datetime import datetime, timedelta
-from functools import wraps
 import hashlib
 import json
+import jwt,maincrud
 from bson import ObjectId
 from flask import Flask, abort, jsonify, request, Response
 from flask_cors import CORS
-import jwt,maincrud
 from pymongo import MongoClient
 
 app = Flask(__name__)
@@ -34,8 +32,10 @@ def user_load():
 
 @app.route('/modal', methods=['POST'])
 def modal():
+    uid = '1'
     data = json.loads(request.data)
     idnumber = data.get('idnumber')
+    print(idnumber)
     datas = maincrud.userdata(idnumber)
     nick = datas['nick']
     pr_photo = datas['pr_photo']
