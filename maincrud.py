@@ -2,7 +2,7 @@ from pymongo import MongoClient
 import certifi,base64,requests,string,random,os
 from bson import ObjectId
 
-client = MongoClient('mongodb+srv://test:sparta@cluster0.avef3.mongodb.net/Cluster0?retryWrites=true&w=majority',tlsCAFile=certifi.where())
+client = MongoClient('',tlsCAFile=certifi.where())
 db = client.joinsports
 
 def user_save(email,pwd,nick,pr_photo,category):  
